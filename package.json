@@ -1,0 +1,37 @@
+{
+  "name": "jquery-datalink",
+  "title": "jQuery datalink",
+  "description": "jQuery plugin for data link between elements, with additional callback processing",
+  "version": "1.0.0",
+  "homepage": "https://github.com/alexdesignworks/jquery-datalink",
+  "author": {
+    "name": "Alex Skrypnyk (alex.designworks@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/alexdesignworks/jquery-datalink.git"
+  },
+  "bugs": "https://github.com/alexdesignworks/jquery-datalink/issues",
+  "licenses": [
+    {
+      "type": "GPL v2",
+      "url": "http://www.gnu.org/licenses/old-licenses/gpl-2.0.html"
+    }
+  ],
+  "devDependencies": {
+    "grunt": "0.4.1",
+    "grunt-bowercopy": "1.0.0",
+    "grunt-contrib-qunit": "0.3.0",
+    "grunt-contrib-uglify": "0.2.7",
+    "grunt-compare-size": "0.4.0-rc.3",
+    "grunt-git-authors": "1.2.0",
+    "testswarm": "1.1.0",
+    "grunt-contrib-jshint": "0.7.1"
+  },
+  "keywords": [
+    "datalink",
+    "events",
+    "binding",
+    "jquery"
+  ]
+}
