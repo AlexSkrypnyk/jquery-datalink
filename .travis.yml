@@ -1,6 +1,6 @@
 sudo: true
 before_script:
-  - sudo npm install -g grunt
+  - sudo npm install -g grunt-cli
 
 script:
   - grunt --verbose --force
