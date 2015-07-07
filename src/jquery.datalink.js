@@ -26,13 +26,13 @@
  *  });
  */
 
-(function ($, window, document, undefined) {
+(function ($, window, undefined) {
   var pluginName = 'datalink',
     version = '@@version';
 
   function Plugin(element, args, existingPlugin) {
     this.defaults = {
-      eventType: 'change',
+      eventType: 'input',
       callback: this.callbackEqual,
       callbackArgs: []
     };
@@ -206,19 +206,23 @@
      */
     bindToElement: function (fieldSettings) {
       var self = this,
+        maxRedispatchCount = 20,
+        $currentFieldToTrack = $(fieldSettings.field),
         $fieldsToTrack = self.getFieldsForEventType(fieldSettings.eventType, fieldSettings.callback);
 
-      // isChained is used to track whether event was triggered as a part of
-      // a chain of updates.
-      $fieldsToTrack.on(fieldSettings.eventType, function (evt, isChained) {
+      // Use currently tracked field to bind event handler to.
+      $currentFieldToTrack.on(fieldSettings.eventType, function (evt, redispatchCount) {
         var updatedField = this,
           callbackArgs = [],
           callbackResult;
 
+        redispatchCount = redispatchCount || 0;
+
         // Prepare callback arguments and dispatch the callback.
         // Currently updated field values.
         callbackArgs.push(self.getFieldValues($(updatedField)));
-        // All tracked field values, including currently updated one.
+        // All tracked field values, including currently updated one. They do
+        // not participate in binding, but need to be passed to the callback.
         callbackArgs.push(self.getFieldValues($fieldsToTrack));
         // Currently updated field object.
         callbackArgs.push($(updatedField));
@@ -237,8 +241,8 @@
         }
 
         // Prevent circular event triggering.
-        if (!isChained) {
-          self.$element.trigger(fieldSettings.eventType, [true]);
+        if (redispatchCount < maxRedispatchCount) {
+          self.$element.trigger(fieldSettings.eventType, [++redispatchCount]);
         }
       });
     },
@@ -250,10 +254,10 @@
       $fields.each(function () {
         var $field = $(this);
         if ($field.prop('tagName').toLowerCase() === 'input') {
-          $field.val(value);
+          $field.val(value.toString());
         }
         else {
-          $field.html(value);
+          $field.html(value.toString());
         }
       });
     },
@@ -335,4 +339,4 @@
 
     return this;
   };
-}(jQuery, window, document));
+}(jQuery, window));
