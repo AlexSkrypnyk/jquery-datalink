@@ -1,10 +1,10 @@
 /**
- * Data link between elements, with additional callback processing.
- * Author: Alex Skrypnyk (alex.designworks@gmail.com)
- * License: GPL v2 (http://www.gnu.org/licenses/old-licenses/gpl-2.0.html)
+ * @@title
+ * @@description
  *
- * Homepage: @HOMEPAGE
- * Date: @DATE
+ * Version: @@version
+ * Author: @@author_name (@@author_email)
+ * License: @@license
  *
  * @usage
  *
@@ -26,18 +26,18 @@
  *  });
  */
 
-;(function ($, window, document, undefined) {
+(function ($, window, document, undefined) {
   var pluginName = 'datalink',
-    version = '0.1';
+    version = '@@version';
 
   function Plugin(element, args, existingPlugin) {
-    this._defaults = {
+    this.defaults = {
       eventType: 'change',
       callback: this.callbackEqual,
       callbackArgs: []
     };
 
-    this._name = pluginName;
+    this.name = pluginName;
     this.element = element;
     this.$element = $(element);
     this.version = version;
@@ -56,6 +56,7 @@
         }
       }
     },
+
     /**
      * Init settings from arguments and previously bound plugin instances.
      *
@@ -69,7 +70,7 @@
         optionsArgs = {};
 
       // Convert arguments to array.
-      args = this._argumentsToArray(args);
+      args = this.argumentsToArray(args);
 
       // Parse plugin arguments from a list of provided arguments.
       //
@@ -106,8 +107,9 @@
       }
 
       // Resolve settings for current and all previous instances of this plugin.
-      this.normaliseSettings($.extend(true, {}, this._defaults, optionsArgs, options), existingPlugin);
+      this.normaliseSettings($.extend(true, {}, this.defaults, optionsArgs, options), existingPlugin);
     },
+
     /**
      * Normalise settings into expected format.
      *
@@ -137,6 +139,7 @@
         }
       }
     },
+
     /**
      * Get settings for specified event type, field and a callback.
      */
@@ -154,6 +157,7 @@
 
       return null;
     },
+
     /**
      * Set field settings.
      */
@@ -168,6 +172,7 @@
         this.settings.push(s);
       }
     },
+
     /**
      * Get fields for specific event type.
      */
@@ -182,6 +187,7 @@
       }
       return $set;
     },
+
     /**
      * Default binding callback.
      *
@@ -194,6 +200,7 @@
     callbackEqual: function (currentValue, trackedValues) {
       return trackedValues.length > 0 ? trackedValues[0] : '';
     },
+
     /**
      * Bind tracking to the specific field.
      */
@@ -235,6 +242,7 @@
         }
       });
     },
+
     /**
      * Set a value for specified field (field type agnostic).
      */
@@ -249,6 +257,7 @@
         }
       });
     },
+
     /**
      * Get values from specified field (field type agnostic).
      */
@@ -269,18 +278,22 @@
     /**
      * Helper to convert function arguments to an array.
      */
-    _argumentsToArray: function (args) {
+    argumentsToArray: function (args) {
       return [].slice.apply(args);
     },
+
     /**
      * 32-bit integer hash code of the provided string.
      */
-    _hashCode: function (s) {
+    hashCode: function (s) {
+      /*jslint bitwise: true */
       return s.split('').reduce(function (a, b) {
         a = ((a << 5) - a) + b.charCodeAt(0);
         return a & a;
       }, 0);
+      /*jslint bitwise: false */
     },
+
     /**
      * Debounce helper to track callbacks execution for triggered events.
      *
@@ -289,9 +302,9 @@
      * @returns
      *   Debounced function or null if function was already added.
      */
-    _debounce: function (func) {
+    debounce: function (func) {
       var self = this,
-        funcHash = self._hashCode(func.toString());
+        funcHash = self.hashCode(func.toString());
 
       if (!window.queue) {
         window.queue = [];

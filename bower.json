@@ -1,6 +1,6 @@
 {
-	"name": "jquery-datalink",
-	"main": "jquery.datalink.js",
+	"name": "jquery-obj2table",
+	"main": "jquery.obj2table.js",
 	"devDependencies": {
 		"qunit": "1.18.0",
 		"jquery-1.6.0": "jquery#1.6.0",

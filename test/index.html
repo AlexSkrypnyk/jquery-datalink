@@ -2,27 +2,31 @@
 <html lang="en">
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	<title>jQuery-Datalink Test Suite</title>
-	<link rel="Stylesheet" media="screen" href="../external/qunit/qunit.css" />
-	<link rel="Stylesheet" media="screen" href="testinit.css" />
-	<script src="../external/qunit/qunit.js"></script>
-	<script src="testinit.js"></script>
-	<script src="data/jquery.js"></script>
-	<script src="../jquery.datalink.js"></script>
-	<script src="unit/test.datalink.js"></script>
-	<script src="data/swarminject.js"></script>
+	<title>Test Suite</title>
+
+  <!--QUnit test framework-->
+  <link rel="stylesheet" media="screen" href="../bower_components/qunit/qunit/qunit.css" />
+	<script src="../bower_components/qunit/qunit/qunit.js"></script>
+
+  <!--Test helpers-->
+	<link rel="stylesheet" media="screen" href="testinit.css" />
+  <script src="testinit.js"></script>
+
+  <!--Required libraries-->
+	<script src="../bower_components/jquery-1.7.2/jquery.js"></script>
+
+  <!--Testable files-->
+	<script src="../src/jquery.datalink.js"></script>
+
+  <!--Files with tests-->
+	<script src="unit/test.js"></script>
 </head>
 <body id="body">
-	<h1 id="qunit-header">jQuery-Datalink Test Suite</h1>
+	<h1 id="qunit-header">Test Suite</h1>
 	<h2 id="qunit-banner"></h2>
 	<div id="qunit-testrunner-toolbar"></div>
 	<h2 id="qunit-userAgent"></h2>
 	<ol id="qunit-tests"></ol>
 	<div id="qunit-fixture"></div>
-	<form id="radiocheckbox" class="hidden">
-		<input id="radiocheckbox-1" type="radio" name="radiocheckbox">
-		<input id="radiocheckbox-2" type="radio" name="radiocheckbox" checked="checked">
-		<input id="radiocheckbox-3" type="checkbox" name="radiocheckbox" checked="checked">
-	</form>
 </body>
 </html>

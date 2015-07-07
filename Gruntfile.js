@@ -1,64 +1,59 @@
+/**
+ * Grunt config file.
+ *
+ * Relies on package.json to get additional information.
+ *
+ * Before run:
+ * - npm install
+ * - bower install
+ *
+ * Run one of the following commands:
+ * grunt
+ * grunt lint
+ * grunt test
+ * grunt build
+ */
+
 /*jshint node: true */
 module.exports = function (grunt) {
-
   'use strict';
 
-  var files = [
-    'jquery.datalink.js',
-    'Gruntfile.js',
-    'test/*.js',
-    'test/unit/*.js'
-  ];
+  var config = {
+    // Source files location.
+    src: 'src',
+    // Build files location.
+    build: 'build',
+    // Array of utility files that are not a part of distribution, but should also
+    // be processed (linted etc.).
+    utilFiles: [
+      'Gruntfile.js',
+      'test/*.js',
+      'test/unit/*.js'
+    ],
+    // Test files location.
+    test: 'test'
+  };
 
+  // Expand app files from source dir if they were not specified in config.
+  config.appFiles = config.appFiles || grunt.file.expand(config.src + '/*');
+  // Define output filename as a first available file, or 'app' if no files.
+  config.outputName = (config.outputName || config.appFiles[0].replace(config.src + '/', '').replace('.js', '') + '.js' || 'app.js');
+  // Merge all files.
+  config.files = config.utilFiles.concat(config.appFiles);
+
+  // Load requried tasks.
   grunt.loadNpmTasks('grunt-bowercopy');
+  grunt.loadNpmTasks('grunt-replace');
   grunt.loadNpmTasks('grunt-compare-size');
   grunt.loadNpmTasks('grunt-git-authors');
-  grunt.loadNpmTasks('grunt-contrib-qunit');
   grunt.loadNpmTasks('grunt-contrib-uglify');
   grunt.loadNpmTasks('grunt-contrib-jshint');
+  grunt.loadNpmTasks('grunt-contrib-connect');
+  grunt.loadNpmTasks('grunt-contrib-qunit');
 
   grunt.initConfig({
+    // Get additional information.
     pkg: grunt.file.readJSON('package.json'),
-
-    // Copy only required files from bower_components to required dirs.
-    // Not a part of 'default' task.
-    bowercopy: {
-      all: {
-        options: {
-          // Write to 'external' dir.
-          destPrefix: 'external'
-        },
-        files: {
-          'qunit/qunit.js': 'qunit/qunit/qunit.js',
-          'qunit/qunit.css': 'qunit/qunit/qunit.css',
-          'qunit/LICENSE.txt': 'qunit/LICENSE.txt',
-
-          'jquery-1.6.0/jquery.js': 'jquery-1.6.0/jquery.js',
-          'jquery-1.6.0/MIT-LICENSE.txt': 'jquery-1.6.0/MIT-LICENSE.txt',
-
-          'jquery-1.6.1/jquery.js': 'jquery-1.6.1/jquery.js',
-          'jquery-1.6.1/MIT-LICENSE.txt': 'jquery-1.6.1/MIT-LICENSE.txt',
-
-          'jquery-1.6.2/jquery.js': 'jquery-1.6.2/jquery.js',
-          'jquery-1.6.2/MIT-LICENSE.txt': 'jquery-1.6.2/MIT-LICENSE.txt',
-
-          'jquery-1.6.3/jquery.js': 'jquery-1.6.3/jquery.js',
-          'jquery-1.6.3/MIT-LICENSE.txt': 'jquery-1.6.3/MIT-LICENSE.txt',
-
-          'jquery-1.6.4/jquery.js': 'jquery-1.6.4/jquery.js',
-          'jquery-1.6.4/MIT-LICENSE.txt': 'jquery-1.6.4/MIT-LICENSE.txt',
-
-          'jquery-1.7.0/jquery.js': 'jquery-1.7.0/jquery.js',
-          'jquery-1.7.0/MIT-LICENSE.txt': 'jquery-1.7.0/MIT-LICENSE.txt',
-
-          'jquery-1.7.1/jquery.js': 'jquery-1.7.1/jquery.js',
-          'jquery-1.7.1/MIT-LICENSE.txt': 'jquery-1.7.1/MIT-LICENSE.txt',
-
-          'jquery-1.7.2/jquery.js': 'jquery-1.7.2/jquery.js',
-          'jquery-1.7.2/MIT-LICENSE.txt': 'jquery-1.7.2/MIT-LICENSE.txt'
-        }
-      }
-    },
 
     // JSHint and JSLint.
     jshint: {
@@ -66,120 +61,92 @@ module.exports = function (grunt) {
         jshintrc: true
       },
       // Run on all files.
-      all: files
+      all: config.files
+    },
+
+    // Use 'connect plugin' to start ad-hoc server for tasks like qunit.
+    connect: {
+      server: {
+        options: {
+          port: 8000,
+          base: '.'
+        }
+      }
     },
 
     // Run QUnit.
     qunit: {
-      files: 'test/index.html'
+      all: {
+        options: {
+          urls: [
+            'http://localhost:8000/' + config.test + '/index.html'
+          ]
+        }
+      }
     },
 
+    replace: {
+      build: {
+        options: {
+          patterns: [
+            {
+              match: 'title',
+              replacement: '<%= pkg.title %>'
+            }, {
+              match: 'description',
+              replacement: '<%= pkg.description %>'
+            }, {
+              match: 'version',
+              replacement: '<%= pkg.version %>'
+            }, {
+              match: 'author_name',
+              replacement: '<%= pkg.author.name %>'
+            }, {
+              match: 'author_email',
+              replacement: '<%= pkg.author.email %>'
+            }, {
+              match: 'license',
+              replacement: '<%= pkg.license %>'
+            }
+          ]
+        },
+        files: [
+          {
+            src: [
+              config.src + '/*'
+            ],
+            dest: config.build + '/' + config.outputName
+          }
+        ]
+      }
+    },
     // Uglify output.
     uglify: {
       options: {
-        banner: '/*! jQuery datalink v@<%= pkg.version %> http://github.com/jquery/jquery-datalink | License: GPL v2 (http://www.gnu.org/licenses/old-licenses/gpl-2.0.html) */'
+        banner: '/* <%= pkg.title %> v.<%= pkg.version %> <%= pkg.homepage %> | License: <%= pkg.license %> */'
       },
       build: {
-        src: 'dist/jquery.datalink.js',
-        dest: 'dist/jquery.datalink.min.js'
+        files: [{
+          src: config.build + '/*.js',
+          dest: config.build + '/' + config.outputName.replace('.js', '.min.js')
+        }]
       }
     },
 
     // Compare size of uglified files.
     compare_size: {
-      files: ['dist/jquery.datalink.js', 'dist/jquery.datalink.min.js']
+      files: grunt.file.expand(config.build + '**/*')
     }
   });
 
-  /**
-   * Git date of the latest commit.
-   */
-  function git_date(fn) {
-    grunt.util.spawn({
-      cmd: 'git',
-      args: ['log', '-1', '--pretty=format:%ad']
-    }, function (error, result) {
-      if (error) {
-        grunt.log.error(error);
-        return fn(error);
-      }
-
-      fn(null, result);
-    });
-  }
-
-  /**
-   * Replace tokens in source code.
-   */
-  grunt.registerTask('max', function () {
-    var dist = 'dist/jquery.datalink.js',
-      done = this.async(),
-      version = grunt.config('pkg.version'),
-      homepage = grunt.config('pkg.homepage');
-
-
-    if (process.env.COMMIT) {
-      version += ' ' + process.env.COMMIT;
-    }
-
-    git_date(function (error, date) {
-      if (error) {
-        return done(false);
-      }
-
-      grunt.file.copy(dist.replace('dist/', ''), dist, {
-        process: function (source) {
-          return source
-            .replace(/@VERSION/g, version)
-            .replace(/@HOMEPAGE/g, homepage)
-            .replace(/@DATE/g, date);
-        }
-      });
-
-      done();
-    });
-  });
-
-  grunt.registerTask('testswarm', function (commit, configFile) {
-    var testswarm = require('testswarm'),
-      config = grunt.file.readJSON(configFile).jquerycolor;
-    config.jobName = 'jQuery datalink commit #<a href="https://github.com/jquery/jquery-datalink/commit/' + commit + '">' + commit.substr(0, 10) + '</a>';
-      config['runNames[]'] = 'jQuery datalink';
-    config['runUrls[]'] = config.testUrl + commit + '/test/index.html';
-    config['browserSets[]'] = ['popular'];
-    testswarm({
-      url: config.swarmUrl,
-      pollInterval: 10000,
-      timeout: 1000 * 60 * 30,
-      done: this.async()
-    }, config);
-  });
-
-  grunt.registerTask('manifest', function () {
-    var pkg = grunt.config('pkg');
-    grunt.file.write('datalink.jquery.json', JSON.stringify({
-      name: 'color',
-      title: pkg.title,
-      description: pkg.description,
-      keywords: pkg.keywords,
-      version: pkg.version,
-      author: {
-        name: pkg.author.name
-      },
-      licenses: pkg.licenses.map(function (license) {
-        return license.url.replace('master', pkg.version);
-      }),
-      bugs: pkg.bugs,
-      homepage: pkg.homepage,
-      docs: pkg.homepage,
-      dependencies: {
-        jquery: '>=1.6'
-      }
-    }, null, '\t'));
-  });
-
-  // Register default, init and build tasks.
-  grunt.registerTask('default', ['jshint', 'qunit', 'build', 'compare_size']);
-  grunt.registerTask('init', ['bowercopy']);
-  grunt.registerTask('build', ['max', 'uglify']);
+  // Register tasks.
+  //
+  // Run all tasks by default.
+  grunt.registerTask('default', ['jshint', 'test', 'build', 'compare_size']);
+  // Run code quality check.
+  grunt.registerTask('lint', ['jshint']);
+  // Run tests.
+  grunt.registerTask('test', ['connect', 'qunit']);
+  // Build distribution.
+  grunt.registerTask('build', ['replace', 'uglify']);
 };

@@ -1,32 +1,29 @@
 {
   "name": "jquery-datalink",
-  "title": "jQuery datalink",
+  "title": "datalink jQuery plugin",
   "description": "jQuery plugin for data link between elements, with additional callback processing",
   "version": "1.0.0",
   "homepage": "https://github.com/alexdesignworks/jquery-datalink",
   "author": {
-    "name": "Alex Skrypnyk (alex.designworks@gmail.com"
+    "name": "Alex Skrypnyk",
+    "email": "alex.designworks@gmail.com"
   },
   "repository": {
     "type": "git",
     "url": "git://github.com/alexdesignworks/jquery-datalink.git"
   },
   "bugs": "https://github.com/alexdesignworks/jquery-datalink/issues",
-  "licenses": [
-    {
-      "type": "GPL v2",
-      "url": "http://www.gnu.org/licenses/old-licenses/gpl-2.0.html"
-    }
-  ],
+  "license": "GPL-2.0",
   "devDependencies": {
     "grunt": "0.4.1",
     "grunt-bowercopy": "1.0.0",
-    "grunt-contrib-qunit": "0.3.0",
-    "grunt-contrib-uglify": "0.2.7",
     "grunt-compare-size": "0.4.0-rc.3",
+    "grunt-contrib-connect": "^0.10.1",
+    "grunt-contrib-jshint": "0.7.1",
+    "grunt-contrib-qunit": "^0.7.0",
+    "grunt-contrib-uglify": "0.2.7",
     "grunt-git-authors": "1.2.0",
-    "testswarm": "1.1.0",
-    "grunt-contrib-jshint": "0.7.1"
+    "grunt-replace": "0.9.2"
   },
   "keywords": [
     "datalink",
