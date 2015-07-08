@@ -17,7 +17,7 @@
  * | #a     | + | #b     | = | #c     |
  * ----------   ----------   ----------
  *
- *  $('#c').datalink($('#a, #b'), function (currentValue, trackedValues) {
+ *  $('#c').datalink($('#a, #b'), function (currentValue, updatedTrackedValue, trackedValues, $currentField, $updatedTrackedField, $trackedFields) {
  *    var sum = 0;
  *    $.each(trackedValues, function () {
  *      sum += parseInt(this, 10);
@@ -201,9 +201,11 @@
      *
      * @see bindToElement()
      */
+    /*jslint unused:false*/
     callbackBindEqual: function (currentValue, updatedTrackedValue, trackedValues, $currentField, $updatedTrackedField, $trackedFields) {
       return updatedTrackedValue;
     },
+    /*jslint unused:true*/
 
     /**
      * Bind tracking to the specific field.
@@ -214,19 +216,19 @@
         $fieldsToTrack = self.getFieldsWithCallback(fieldSettings.callback);
 
       if ($fieldsToTrack.is('input, textare')) {
-        $fieldsToTrack.on('input keyup', function (evt) {
+        $fieldsToTrack.on('input keyup', function () {
           $(this).trigger(EVENT_UPDATE);
         });
       }
       else {
-        $fieldsToTrack.observe('characterdata subtree added removed', function (record) {
+        $fieldsToTrack.observe('characterdata subtree added removed', function () {
           $(this).trigger(EVENT_UPDATE);
         });
 
       }
 
       // Use currently tracked field to bind event handler to.
-      $currentFieldToTrack.on(EVENT_UPDATE, function (evt) {
+      $currentFieldToTrack.on(EVENT_UPDATE, function () {
         var $updatedTrackedField = $(this),
           callbackArgs = [],
           callbackResult;

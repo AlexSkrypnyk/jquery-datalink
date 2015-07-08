@@ -29,7 +29,7 @@
   var randomString = function (n) {
     return new Array(n).join().replace(/(.|$)/g, function () {
       return ((Math.random() * 36) | 0).toString(36);
-    })
+    });
   };
 
   QUnit.module('Direct connection');
@@ -79,8 +79,8 @@
   test('Input chain - val()', function (assert) {
     var value = randomString(5),
       $src = $('#text1'),
-      $dst = $('#text2');
-    $dst2 = $('#text3');
+      $dst = $('#text2'),
+      $dst2 = $('#text3');
 
     assert.equal($src.getValue(), '', 'Source is empty before linking');
     assert.equal($dst.getValue(), '', 'Destination is empty before linking');
@@ -288,11 +288,11 @@
 
   QUnit.module('Dependencies');
   test('jQuery Observe', function (assert) {
-    var existingPlugin = $.fn['observe'];
-    delete $.fn['observe'];
+    var existingPlugin = $.fn.observe;
+    delete $.fn.observe;
     assert.throws(function () {
       $('#text1').datalink($('#text2'));
     }, 'Please install jquery-observer plugin', 'Missing jQuery-observer dependency throws an exception');
-    $.fn['observe'] = existingPlugin;
+    $.fn.observe = existingPlugin;
   });
 }());

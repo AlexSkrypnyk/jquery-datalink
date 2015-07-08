@@ -12,5 +12,8 @@
     "jquery-1.7.1": "jquery#1.7.1",
     "jquery-1.7.2": "jquery#1.7.2",
     "jquery-observe": "~2.0.2"
+  },
+  "dependencies": {
+    "bind-polyfill": "~1.0.0"
   }
 }
