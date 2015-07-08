@@ -1,15 +1,60 @@
 .top-left {
-	position: fixed;
-	top: 1px;
-	left: 1px;
-	width: 1px;
-	height: 1px;
-	margin: 0;
-	padding: 0;
-	border: none;
+  position: fixed;
+  top: 1px;
+  left: 1px;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  border: none;
 }
 
 .hidden {
-	position: absolute;
-	left: -9999px;
+  position: absolute;
+  left: -9999px;
+}
+
+#qunit-fixture.visible {
+  position: relative;
+  left: auto;
+  top: auto;
+  width: auto;
+  height: auto;
+  text-indent: 0;
+}
+
+.qunit-fixture {
+  padding: 10px;
+  margin-top: 20px;
+  background: #eaeaea;
+}
+
+.qunit-fixture form {
+  margin-bottom: 20px;
+}
+
+.qunit-fixture [id^="text"] {
+  display: block;
+  margin-top: 5px;
+  font-size: 14px;
+}
+
+.qunit-fixture [id^="container"] {
+  position: relative;
+  background: #fafafa;
+  min-width: 100px;
+  min-height: 25px;
+  margin-top: 5px;
+}
+
+.qunit-fixture [id^="container"]:first-child {
+  margin-top: 20px;
+}
+
+.qunit-fixture [id^="container"]:after {
+  position: absolute;
+  right: 10px;
+  top: 3px;
+  content: 'container';
+  color: #eaeaea;
 }

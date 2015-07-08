@@ -28,21 +28,24 @@
 
 (function ($, window, undefined) {
   var pluginName = 'datalink',
-    version = '@@version';
+    version = '@@version',
+    EVENT_UPDATE = 'datalink:change';
 
   function Plugin(element, args, existingPlugin) {
+    this.name = pluginName;
+    this.version = version;
+
     this.defaults = {
-      eventType: 'input',
-      callback: this.callbackEqual,
+      callback: this.callbackBindEqual,
       callbackArgs: []
     };
 
-    this.name = pluginName;
-    this.element = element;
     this.$element = $(element);
-    this.version = version;
 
     this.initSettings(args, existingPlugin);
+
+    // Check that dependencies are met.
+    this.checkDependencies();
 
     this.init();
   }
@@ -54,6 +57,15 @@
         if (this.settings.hasOwnProperty(i)) {
           this.bindToElement(this.settings[i]);
         }
+      }
+    },
+
+    /**
+     * Check that dependencies are met and throw errors for each unmet ones.
+     */
+    checkDependencies: function () {
+      if ($.fn.observe === undefined) {
+        throw 'Please install jquery-observer plugin';
       }
     },
 
@@ -73,13 +85,6 @@
       args = this.argumentsToArray(args);
 
       // Parse plugin arguments from a list of provided arguments.
-      //
-      // Event type.
-      if (typeof args[0] === 'string') {
-        optionsArgs.eventType = args[0];
-        args = args.slice(1);
-      }
-
       // Fields.
       if (args.length > 0) {
         optionsArgs.fields = args[0];
@@ -122,11 +127,10 @@
      *   to the field.
      */
     normaliseSettings: function (singleSettings, existingPlugin) {
-      var self = this,
+      var self = this, $fields, i;
       // Get fields to work on: either from settings or from previously
       // normalised settings of existing instance.
-        $fields = 'fields' in singleSettings ? singleSettings.fields : $(singleSettings.field),
-        i;
+      $fields = 'fields' in singleSettings ? singleSettings.fields : $(singleSettings.field);
 
       $fields.each(function () {
         self.setSettingForField(this, singleSettings);
@@ -135,21 +139,23 @@
       // Recursively normalise existing plugin settings, if provided.
       if (existingPlugin) {
         for (i in existingPlugin.settings) {
-          self.normaliseSettings(existingPlugin.settings[i]);
+          if (existingPlugin.settings.hasOwnProperty(i)) {
+            self.normaliseSettings(existingPlugin.settings[i]);
+          }
         }
       }
     },
 
     /**
-     * Get settings for specified event type, field and a callback.
+     * Get settings for specified field and a callback.
      */
-    getSettingsForField: function (eventType, field, callback) {
+    getSettingsForField: function (field, callback) {
       this.settings = this.settings || [];
       var i, s;
       for (i in this.settings) {
         if (this.settings.hasOwnProperty(i)) {
           s = this.settings[i];
-          if (s.eventType === eventType && s.field === field && s.callback === callback) {
+          if (s.field === field && s.callback === callback) {
             return this.settings[i];
           }
         }
@@ -163,7 +169,7 @@
      */
     setSettingForField: function (field, singleSettings) {
       this.settings = this.settings || [];
-      var existingSettings = this.getSettingsForField(singleSettings.eventType, field, singleSettings.callback),
+      var existingSettings = this.getSettingsForField(field, singleSettings.callback),
         s;
       if (!existingSettings) {
         s = $.extend({}, singleSettings);
@@ -174,15 +180,17 @@
     },
 
     /**
-     * Get fields for specific event type.
+     * Get fields with similar callback.
      */
-    getFieldsForEventType: function (eventType, callback) {
+    getFieldsWithCallback: function (callback) {
       this.settings = this.settings || [];
       var $set = $(), i, s;
       for (i in this.settings) {
-        s = this.settings[i];
-        if (s.eventType === eventType && s.callback === callback) {
-          $set = $set.add($(s.field));
+        if (this.settings.hasOwnProperty(i)) {
+          s = this.settings[i];
+          if (s.callback === callback) {
+            $set = $set.add($(s.field));
+          }
         }
       }
       return $set;
@@ -191,14 +199,10 @@
     /**
      * Default binding callback.
      *
-     * By default, 4 parameters are available:
-     * - currentValue: Current field value.
-     * - trackedValues: Tracked fields values.
-     * - $currentField: Current field object.
-     * - $trackedFields: Tracked fields object.
+     * @see bindToElement()
      */
-    callbackEqual: function (currentValue, trackedValues) {
-      return trackedValues.length > 0 ? trackedValues[0] : '';
+    callbackBindEqual: function (currentValue, updatedTrackedValue, trackedValues, $currentField, $updatedTrackedField, $trackedFields) {
+      return updatedTrackedValue;
     },
 
     /**
@@ -206,43 +210,68 @@
      */
     bindToElement: function (fieldSettings) {
       var self = this,
-        maxRedispatchCount = 20,
         $currentFieldToTrack = $(fieldSettings.field),
-        $fieldsToTrack = self.getFieldsForEventType(fieldSettings.eventType, fieldSettings.callback);
+        $fieldsToTrack = self.getFieldsWithCallback(fieldSettings.callback);
+
+      if ($fieldsToTrack.is('input, textare')) {
+        $fieldsToTrack.on('input keyup', function (evt) {
+          $(this).trigger(EVENT_UPDATE);
+        });
+      }
+      else {
+        $fieldsToTrack.observe('characterdata subtree added removed', function (record) {
+          $(this).trigger(EVENT_UPDATE);
+        });
+
+      }
 
       // Use currently tracked field to bind event handler to.
-      $currentFieldToTrack.on(fieldSettings.eventType, function (evt, redispatchCount) {
-        var updatedField = this,
+      $currentFieldToTrack.on(EVENT_UPDATE, function (evt) {
+        var $updatedTrackedField = $(this),
           callbackArgs = [],
           callbackResult;
 
-        redispatchCount = redispatchCount || 0;
-
         // Prepare callback arguments and dispatch the callback.
-        // Currently updated field values.
-        callbackArgs.push(self.getFieldValues($(updatedField)));
-        // All tracked field values, including currently updated one. They do
-        // not participate in binding, but need to be passed to the callback.
+        // Arguments list (values and corresponding fields):
+        // - currentValue - value of the field that will be updated.
+        // - updatedTrackedValue - value of the tracked field that has just been
+        //   updated.
+        // - trackedValues - array of all tracked values from all tracked
+        //   fields. In case of only 1 tracked field, this array will consist of
+        //   value of updatedTrackedValue.
+        // - $currentField - the field that will be updated.
+        // - $updatedTrackedField - the tracked field that has just been
+        //   updated.
+        // - $trackedFields - jQuery array of all tracked fields. In case of
+        //   only 1 tracked field, this array will consist of
+        //   $updatedTrackedField.
+        //
+        // Value of the field that will be updated. Changing this value will not
+        // change the original value.
+        callbackArgs.push(self.getFieldValues(self.$element).pop());
+        // Value of the tracked field that has just been updated.
+        callbackArgs.push(self.getFieldValues($updatedTrackedField).pop());
+        // Array of all tracked values from all tracked fields.
         callbackArgs.push(self.getFieldValues($fieldsToTrack));
-        // Currently updated field object.
-        callbackArgs.push($(updatedField));
-        // All tracked field objects.
+        // The field that will be updated. This field should not be updated
+        // directly as callback result will set it's value, however it is
+        // possible to change it and return null from callback (see below).
+        callbackArgs.push(self.$element);
+        // The tracked field that has just been updated.
+        callbackArgs.push($updatedTrackedField);
+        // jQuery array of all tracked fields.
         callbackArgs.push($fieldsToTrack);
-        // Additional callback arguments.
+        // Additional callback arguments from settings.
         callbackArgs = $.merge(callbackArgs, fieldSettings.callbackArgs);
+
         // Dispatch callback and assign values to element field, but only
         // if callback result is not null.
         // Using null in callback result is useful when callback manipulates
         // some objects outside of this plugin's context. This should be
-        // avoided, but sometime necessary.
+        // avoided, but sometimes necessary.
         callbackResult = fieldSettings.callback.apply(self, callbackArgs);
         if (callbackResult !== null) {
           self.setFieldsValue(self.$element, callbackResult);
-        }
-
-        // Prevent circular event triggering.
-        if (redispatchCount < maxRedispatchCount) {
-          self.$element.trigger(fieldSettings.eventType, [++redispatchCount]);
         }
       });
     },
@@ -270,15 +299,11 @@
 
       $fields.each(function () {
         var $field = $(this);
-        if ($field.prop('tagName').toLowerCase() === 'input') {
-          values.push($field.val());
-        }
-        else {
-          values.push($field.html());
-        }
+        values.push($field.is('input, textarea') ? $field.val() : $field.html());
       });
       return values;
     },
+
     /**
      * Helper to convert function arguments to an array.
      */
@@ -296,37 +321,10 @@
         return a & a;
       }, 0);
       /*jslint bitwise: false */
-    },
-
-    /**
-     * Debounce helper to track callbacks execution for triggered events.
-     *
-     * @param func
-     *   Function to execute.
-     * @returns
-     *   Debounced function or null if function was already added.
-     */
-    debounce: function (func) {
-      var self = this,
-        funcHash = self.hashCode(func.toString());
-
-      if (!window.queue) {
-        window.queue = [];
-      }
-
-      if (window.queue.indexOf(funcHash) === -1) {
-        window.queue.push(funcHash);
-
-        return function () {
-          return func.apply(this, arguments);
-        };
-      }
-      else {
-        return null;
-      }
     }
   });
 
+  // Create plugin in jQuery namespace.
   $.fn[pluginName] = function () {
     // Get all arguments to pass it to the constructor.
     var args = arguments;
@@ -339,4 +337,20 @@
 
     return this;
   };
+
+  /**
+   * Override jQuery.fn.val to trigger datalink event.
+   */
+  (function () {
+    var originalVal = $.fn.val;
+    $.fn.val = function () {
+      var result = originalVal.apply(this, arguments);
+      if (arguments.length > 0) {
+        $(this).trigger(EVENT_UPDATE);
+      }
+      return result;
+    };
+  }());
+
 }(jQuery, window));
+

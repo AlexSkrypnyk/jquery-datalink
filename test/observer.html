@@ -1,0 +1,85 @@
+<!-- For me, It all starts with a DEMO page with testing code to learn instead of
+     reading a big documentation -->
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=iso-8859-1"/>
+  <meta http-equiv="cache-control" content="no-cache"/>
+
+  <title>Test/Demo Page</title>
+
+  <script src="../bower_components/jquery-1.7.2/jquery.js"></script>
+  <script src="../bower_components/jquery-observe/jquery-observe.js"></script>
+  <!--<script src="http://code.jquery.com/ui/1.9.0/jquery-ui.min.js" type="text/javascript"></script>-->
+
+  <script>
+
+    //demo code
+
+    (function ($) {
+      $(document).ready(function () {
+
+        $('#src')
+          .observe('characterdata subtree added', function (record) {
+            var value = record.type == 'childList' ? record.addedNodes[0].nodeValue : record.target.nodeValue;
+            $('#dst').trigger('datalink:change', [value]);
+          });
+
+        $('#dst').on('datalink:change', function(evt, txt){
+          $(evt.currentTarget).text(txt);
+          console.log(evt);
+        });
+
+        $('#dst')
+          .observe('characterdata subtree added', function (record) {
+            var value = record.type == 'childList' ? record.addedNodes[0].nodeValue : record.target.nodeValue;
+            $('#dst2').trigger('datalink:change', [value]);
+          });
+
+        $('#dst2').on('datalink:change', function(evt, txt){
+          $(evt.currentTarget).text(txt);
+          console.log(evt);
+        });
+
+
+        /////////////////////////////////////////////////////////////////////
+
+        $('#text1')
+          .on('change characterdata subtree added', function (record) {
+            var value = record.type == 'childList' ? record.addedNodes[0].nodeValue : record.target.nodeValue;
+            $('#text2').trigger('datalink:change', [value]);
+            console.log('asdasd');
+          });
+
+        $('#text2').on('datalink:change', function(evt, txt){
+          $(evt.currentTarget).text(txt);
+          console.log(evt);
+        });
+
+        $('#text2')
+          .observe('characterdata subtree added', function (record) {
+            var value = record.type == 'childList' ? record.addedNodes[0].nodeValue : record.target.nodeValue;
+            $('#text3').trigger('datalink:change', [value]);
+          });
+
+        $('#text3').on('datalink:change', function(evt, txt){
+          $(evt.currentTarget).text(txt);
+          console.log(evt);
+        });
+
+      });
+    }(jQuery));
+
+  </script>
+</head>
+<body>
+<div>A|<span id="src">TEST</span>|</div>
+<div>B|<span id="dst">TEST</span>|</div>
+<div>C|<span id="dst2">TEST</span>|</div>
+<hr/>
+<div>D|<input type="text" id="text1"/>|</div>
+<div>E|<input type="text" id="text2"/>|</div>
+<div>F|<input type="text" id="text3"/>|</div>
+</body>
+</html>
